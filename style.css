@@ -133,3 +133,62 @@ h1 {
         padding: 12px 20px;
     }
 }
+
+/* Leaderboard Section Styling */
+.leaderboard-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.leaderboard-section h2 {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: #FFC107; /* Amber color for leaderboard title */
+}
+
+.leaderboard-loading {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 10px;
+}
+
+.leaderboard-list {
+    list-style: none; /* Remove bullet points */
+    padding: 0;
+    margin: 0;
+    max-height: 200px; /* Limit height to allow scrolling on mobile */
+    overflow-y: auto; /* Enable vertical scrolling */
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.leaderboard-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1.1em;
+    color: #fff;
+}
+
+.leaderboard-list li:last-child {
+    border-bottom: none; /* No border for the last item */
+}
+
+.leaderboard-list li span:first-child {
+    font-weight: bold;
+    color: #8BC34A; /* Green for player name */
+}
+
+.leaderboard-list li span:last-child {
+    font-weight: bold;
+    color: #007bff; /* Blue for score */
+}
+
+/* Hide when JavaScript is running */
+.leaderboard-list.hidden,
+.leaderboard-loading.hidden {
+    display: none;
+}
