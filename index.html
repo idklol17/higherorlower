@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Higher or Lower</title>
+    <title>Click Climber Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
-        <h1>Higher or Lower</h1>
-        <p class="score">Score: <span id="score">0</span></p>
-        <div class="card-display">
-            <p>Current Number:</p>
-            <p id="current-number" class="number-circle">?</p>
-        </div>
-        <div class="buttons-container">
-            <button id="higher-btn" class="game-button">Higher</button>
-            <button id="lower-btn" class="game-button">Lower</button>
-        </div>
-        <p id="message" class="message"></p>
-        <button id="start-btn" class="game-button start-button">Start Game</button>
+        <h1>Click Climber</h1>
 
-        <div class="leaderboard-section">
+        <div id="name-setup">
+            <label for="playerName">Enter Your Name:</label>
+            <input type="text" id="playerName" maxlength="20" placeholder="Anonymous">
+            <button id="startGameButton">Start Game</button>
+        </div>
+
+        <div id="game-play" style="display: none;">
+            <p>Welcome, <span id="displayPlayerName"></span>!</p>
+            <p>Clicks: <span id="clickCount">0</span></p>
+            <button id="clickButton">Click Me!</button>
+        </div>
+
+        <div id="leaderboard-section">
             <h2>Global Leaderboard</h2>
-            <div class="leaderboard-loading" id="leaderboard-loading">Loading leaderboard...</div>
-            <ul id="leaderboard-list" class="leaderboard-list">
+            <ul id="leaderboard-list">
                 </ul>
         </div>
-        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
