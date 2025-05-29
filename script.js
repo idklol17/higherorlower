@@ -7,12 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const clickCountSpan = document.getElementById('clickCount');
     const clickButton = document.getElementById('clickButton');
     const leaderboardList = document.getElementById('leaderboard-list');
+    const submitScoreButton = document.getElementById('submitScoreButton'); // Get the new button
 
     let playerName = "Anonymous";
     let clickCount = 0;
 
     // --- JSONBin.io Configuration ---
-    // Make sure your Bin ID and Master Key are correctly set here
     const JSONBIN_BIN_ID = '683805bc8960c979a5a28af2'; // Your provided Bin ID
     const JSONBIN_MASTER_KEY = '$2a$10$f70uReJz0DPw8f.h9AN4fu0XspUA3cs3pKerRqXOLGB4Na9PFTare'; // Your provided Secret Key
     const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
         displayPlayerNameSpan.textContent = playerName;
         nameSetupDiv.style.display = 'none';
         gamePlayDiv.style.display = 'block';
+        clickButton.disabled = false; // Ensure click button is enabled for new game
+        submitScoreButton.style.display = 'block'; // Make submit button visible
+        clickCount = 0; // Reset clicks for new game
+        clickCountSpan.textContent = clickCount; // Update display
         loadLeaderboard(); // Load leaderboard when game starts
     });
 
@@ -42,17 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(JSONBIN_URL, {
                 method: 'GET',
                 headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY, // Use Master Key for read access
-                    'X-Bin-Meta': 'false' // Get only the content, not metadata
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'X-Bin-Meta': 'false'
                 }
             });
 
             if (response.ok) {
                 const data = await response.json();
-                // Access the 'scores' array from the returned object
                 const scores = data.scores && Array.isArray(data.scores) ? data.scores : [];
 
-                // Sort scores (descending by score, then ascending by timestamp for tie-breaking)
                 scores.sort((a, b) => {
                     if (b.score !== a.score) {
                         return b.score - a.score;
@@ -60,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
                 });
 
-                leaderboardList.innerHTML = ''; // Clear existing list
-                scores.slice(0, 10).forEach((entry, index) => { // Display top 10
+                leaderboardList.innerHTML = '';
+                scores.slice(0, 10).forEach((entry, index) => {
                     const listItem = document.createElement('li');
                     listItem.innerHTML = `
                         <span>#${index + 1} ${entry.name}</span>
@@ -80,22 +82,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function saveScore() {
-        // First, get the current scores to update it
         try {
             const getResponse = await fetch(JSONBIN_URL, {
                 method: 'GET',
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false' // Get only the content
+                    'X-Bin-Meta': 'false'
                 }
             });
 
             let currentScores = [];
-            let binContent = {}; // To hold the full bin content like {"scores": [...]}
+            let binContent = {};
 
             if (getResponse.ok) {
                 const data = await getResponse.json();
-                binContent = data; // Store the entire object
+                binContent = data;
                 currentScores = data.scores && Array.isArray(data.scores) ? data.scores : [];
             } else if (getResponse.status !== 404) {
                 console.error('Failed to retrieve current scores before saving:', getResponse.statusText);
@@ -103,37 +104,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Add the new score only if it's not zero and a valid number
-            if (clickCount > 0) {
+            if (clickCount > 0) { // Only add score if clicks are positive
                 currentScores.push({ name: playerName, score: clickCount, timestamp: new Date().toISOString() });
             }
 
-            // Limit the number of entries in the leaderboard
             currentScores.sort((a, b) => {
                 if (b.score !== a.score) {
                     return b.score - a.score;
                 }
                 return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
             });
-            currentScores = currentScores.slice(0, 100); // Keep only top 100 entries
+            currentScores = currentScores.slice(0, 100);
 
-            // Update the binContent object with the modified scores array
             binContent.scores = currentScores;
 
-            // Update the bin with the new object containing the scores array
             const updateResponse = await fetch(JSONBIN_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'Content-Length': JSON.stringify(binContent).length // Stringify the entire object
+                    'Content-Length': JSON.stringify(binContent).length
                 },
-                body: JSON.stringify(binContent) // Send the entire object
+                body: JSON.stringify(binContent)
             });
 
             if (updateResponse.ok) {
                 console.log('Score saved successfully to JSONBin!');
-                loadLeaderboard(); // Reload leaderboard after saving
+                loadLeaderboard();
             } else {
                 console.error('Failed to save score to JSONBin:', updateResponse.statusText);
                 const errorData = await updateResponse.text();
@@ -147,43 +144,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Game End and Score Submission ---
-    const submitScoreButton = document.createElement('button');
-    submitScoreButton.textContent = 'Submit Score';
-    submitScoreButton.style.marginTop = '20px';
-    submitScoreButton.style.display = 'none'; // Hide initially
-    gamePlayDiv.appendChild(submitScoreButton);
-
+    // The endGame function now handles the logic after submission
     function endGame() {
         clickButton.disabled = true; // Disable the click button
-        alert(`Game Over! You clicked ${clickCount} times. Click 'Submit Score' to add your result to the leaderboard.`);
-        submitScoreButton.style.display = 'block'; // Show submit button
-    }
-
-    submitScoreButton.addEventListener('click', () => {
-        if (clickCount > 0) {
+        submitScoreButton.style.display = 'none'; // Hide submit button after click
+        
+        if (clickCount > 0) { // Only submit if clicks are positive
             saveScore();
-            submitScoreButton.style.display = 'none';
-            setTimeout(() => {
-                // Reset for a new game
-                clickCount = 0;
-                clickCountSpan.textContent = 0;
-                clickButton.disabled = false;
-                playerNameInput.value = ''; // Clear name input
-                nameSetupDiv.style.display = 'block';
-                gamePlayDiv.style.display = 'none';
-            }, 2000);
+            alert(`Game Over! You clicked ${clickCount} times. Your score has been submitted.`);
         } else {
             alert("You didn't click anything! No score to submit.");
-            submitScoreButton.style.display = 'none';
+        }
+
+        // Reset game after a short delay
+        setTimeout(() => {
             clickCount = 0;
             clickCountSpan.textContent = 0;
-            clickButton.disabled = false;
-            playerNameInput.value = '';
-            nameSetupDiv.style.display = 'block';
-            gamePlayDiv.style.display = 'none';
-        }
-    });
+            playerNameInput.value = ''; // Clear name input
+            nameSetupDiv.style.display = 'block'; // Show name setup again
+            gamePlayDiv.style.display = 'none'; // Hide game play
+        }, 2000); // Wait 2 seconds before resetting UI
+    }
 
-    // You can uncomment the line below to test automatic game ending after 10 seconds.
-    // setTimeout(endGame, 10000);
+    // Event listener for the new "Submit Score" button
+    submitScoreButton.addEventListener('click', endGame); // Calls endGame when clicked
+
+    // Hide the submit button initially (before game starts)
+    submitScoreButton.style.display = 'none';
 });
